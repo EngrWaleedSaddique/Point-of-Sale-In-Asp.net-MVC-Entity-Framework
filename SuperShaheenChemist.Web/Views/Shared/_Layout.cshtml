@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Super Shaheen Chemist</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="~/Client/plugins/fontawesome-free/css/all.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="~/Client/dist/css/adminlte.css">
+    <!-- Bootstrap Min css-->
+    <link href="~/Client/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Google Font: Source Sans Pro -->
+    <link href="~/Content/Css/GoogleFonts.css" rel="stylesheet" />
+    <!-- stellar Nav-->
+    <link rel="stylesheet" type="text/css" media="all" href="~/Client/dist/css/stellarnav.css">
+    <script src="~/Content/Js/Jquery.js"></script>
+    <script type="text/javascript" src="~/Client/dist/js/stellarnav.min.js"></script>
+    <!-- custom Style Sheet-->
+    <link href="~/Client/dist/css/custom.css" rel="stylesheet" />
+</head>
+<body class="hold-transition skin-yellow sidebar-collapse">
+    <!-- Stellar Nav-->
+    <div class="stellarnav hidden-print">
+        <ul>
+            <li>
+                <a href="javascript:void(0)">
+                    <i class="fas fa-tachometer-alt icon-settings" aria-hidden="true">
+                    </i>
+                    <span class="text-center link-settting">
+                        Dashboard
+                    </span>
+                </a>
+                <ul>
+                    <li>
+                        <a href="/home/index">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="javascript:void(0)">
+                    <i class="fa fa-life-ring icon-settings" aria-hidden="true">
+                    </i>
+                    <span class="text-center link-settting">
+                        Products
+                    </span>
+                </a>
+                <ul>
+                    <li>
+                        <a href="/product/index">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Products List
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/product/add_new_product">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Add Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/product/OutOfStock">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Out of stock
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="/stock/ExpiredStock">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Expired Stock
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/product/stock">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Stock
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="javascript:void(0)">
+                    <i class="fa fa-clipboard icon-settings" aria-hidden="true">
+                    </i>
+                    <span class="text-center link-settting">
+                        POS
+                    </span>
+                </a>
+                <ul>
+                    <li>
+                        <a href="/Invoice/ViewInvoices">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            View Invoice
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Invoice/CreateInvoice">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Create invoice
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Invoice/ReturnSales">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Return Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Stock Transfer IN / OUT
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="javascript:void(0)">
+                    <i class="fa fa-briefcase icon-settings" aria-hidden="true">
+                    </i>
+                    <span class="text-center link-settting">
+                        Purchase
+                    </span>
+                </a>
+                <ul>
+                    <li>
+                        <a href="/Purchase/Purchases">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Purchases
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Purchase/ReturnPurchase">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Purchase return
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Purchase/PurchaseOrder">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Purchase Order
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="javascript:void(0)">
+                    <i class="fa fa-cog icon-settings" aria-hidden="true">
+                    </i>
+                    <span class="text-center link-settting">
+                        Settings
+                    </span>
+                </a>
+                <ul>
+                    <li>
+                        <a href="#">
+                            <i class="sub-icon-settings far fa-circle"></i>
+                            Layout & System
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <!--Stellar Nav-->
+    
+        <!-- /.navbar -->
+        <!-- Content Wrapper. Contains page content -->
+        <div class="container-fluid">
+
+            <div class="content">
+                @RenderBody()
+            </div>
+        </div>
+        <!-- /.content-wrapper -->
+        <!-- Main Footer -->
+        <footer class="main-footer hidden-print">
+            <!-- To the right -->
+            <div class="float-right d-none d-sm-inline">
+                Anything you want
+            </div>
+            <!-- Default to the left -->
+            <strong>Copyright &copy; 2021 <a href="#">Waleed Saddique</a>.</strong> All rights reserved.
+        </footer>
+    
+    <!-- ./wrapper -->
+    <!-- REQUIRED SCRIPTS -->
+    <!-- jQuery -->
+    <!-- Bootstrap 4 -->
+    <script src="~/Client/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="~/Client/dist/js/adminlte.min.js"></script>
+
+</body>
+</html>
+<script type="text/javascript">
+    jQuery(document).ready(function ($) {
+        jQuery('.stellarnav').stellarNav({
+            theme: 'light',
+            breakpoint: 960,
+            position: 'top'
+        });
+    });
+</script>

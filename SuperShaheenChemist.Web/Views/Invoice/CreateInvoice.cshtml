@@ -1,0 +1,455 @@
+﻿<script src="~/Content/Js/jquery-ui.js"></script>
+<link href="~/Content/Css/jquery-ui.css" rel="stylesheet" />
+@{
+    ViewBag.Title = "Create Invoice";
+}
+<div class="container hidden-print">
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <h3>
+                <i class="fa fa-globe"></i> Invoice No # @ViewBag.billno
+            </h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <label><i class="fa fa-barcode" aria-hidden="true"></i> SCAN BARCODE OR SEARCH ITEMS</label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label><i class="fa fa-search" aria-hidden="true"></i> <b>SEARCH ITEMS TO SALE :</b></label>
+                <input type="text" id="searchProduct" placeholder="Search Product By Name Or BarCode" class="form-control clearable" />
+                <small>Search through product name or Barcode </small> <br />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label><i class="fa fa-user" aria-hidden="true"></i> <b>Enter Customer Name :</b></label>
+                <input type="text" id="customerName" placeholder="Enter Customer Name" class="form-control clearable" />
+                <small>Enter Customer Name </small> <br />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table" id="purchaseItems">
+                    <thead class="">
+                        <tr>
+                            <th>Action</th>
+                            <th>Item</th>
+                            <th>Batch No</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Loose</th>
+                            <th>Expiry</th>
+                            <th>Disc %</th>
+
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 text-right">
+        <button id="submit" class="btn btn-primary"><i class="fa fa-print" aria-hidden="true"></i> Save & Print</button>
+    </div>
+
+</div>
+<script>
+    $(document).ready(function () {
+
+        var rowCount = $('#purchaseItems tbody tr').length;
+        if (rowCount < 1) {
+            $("#submit").hide();
+        }
+        window.addEventListener("pageshow", function (event) {
+            var historyTraversal = event.persisted ||
+                (typeof window.performance != "undefined" &&
+                    window.performance.navigation.type === 2);
+            if (historyTraversal) {
+
+                window.location.reload();
+            }
+        });
+        $('#searchProduct').autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "/purchase/GetProductList",
+                    type: "GET",
+                    dataType: 'JSON',
+                    selectFirst: true,
+                    data: { productName: request.term },
+                    success: function (data) {
+                        response($.map(data, function (item) {
+                            return { label: item.ProductName, value: item.productID }
+                        }));
+                    }
+
+                });
+            },
+            select: function (event, ui) {
+                event.preventDefault();
+                $('#searchProduct').val('');
+                $product_id = ui.item.value;
+                addRecordToTable($product_id);
+
+            },
+            focus: function (event, ui) {
+                return false;
+            }
+        });
+        var dropdowndata;
+        function addRecordToTable(productid) {
+            $.ajax({
+                url: "/purchase/getProduct",
+                type: "GET",
+                dataType: 'JSON',
+                data: { productId: productid },
+                success: function (data) {
+                    Pname = data.ProductName;
+
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        url: "/invoice/ProductsWithBatchNo",
+                        data: { Pname: Pname },
+                        success: function (data) {
+                            dropdowndata = data;
+
+                        }
+                    });
+                    var date = new Date(parseInt(data.ExpiryDate.substr(6)));
+                    date = date.toLocaleDateString();
+                    var start = "<select id='dropdown'>";
+                    var close = "</select>";
+                    var pattern = "";
+                    $.each(dropdowndata, function (i, data) {
+
+
+                        pattern = pattern + "<option value=" + data.Id + ">" + data.BatchNo + "</option>";
+                    });
+                    var string = start + pattern + close;
+                    $("#purchaseItems").append('<tr class="rowSelector" style="background-color: white;"><td><button class="remove btn btn-danger"><i class="fas fa-times-circle" aria-hidden="true"></i></button></td><td>' + data.ProductName + '</td><td>' + string + '</td><td>'
+                        + data.PackRetailCost + '</td><td><input class="qunatity" style="width:80px" name="text1" type="number"/></td></td><td><input class="loose" style="width:80px" name="loose" type="number"/></td><td>' + date + '</td><td><input class="discount" style="width:80px" name="discount" type="number"/></td><td id="amount">0</td><td><input type="hidden" class="prodId" value="' + data.Id + '"></td></tr>');
+                    $("#barcode_scan_area").empty();
+
+                    $("#submit").show();
+
+                }
+            });
+        }
+        $('#purchaseItems').on('keyup', 'input[name="text1"]', function () {
+            var parentElement = $(this).closest("tr");
+            var price = parentElement.find('td:eq(3)').text();
+            var quantity = parentElement.find('input[name="text1"]').val();
+            var amount = price * quantity;
+            if (parentElement.find('input[name="discount"]').val() != "" && parentElement.find("input[name='text1']").val() != "") {
+
+                if (parentElement.find('input[name="discount"]').val() > 10) {
+                    parentElement.find('input[name="discount"]').val(10);
+                }
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = amount * (discount / 100);
+                amount = amount - discount;
+                amount = parseFloat(amount).toFixed(2);
+
+            }
+            if (parentElement.find("input[name='loose']").val() != "" && parentElement.find("input[name='text1']").val() != "") {
+                var totalamount = parseFloat(parentElement.find("td:eq(8)").text());
+                amount = amount + totalamount;
+            }
+            if (parentElement.find('input[name="text1"]').val() == "") {
+                if (parentElement.find('input[name="loose"]').val() != "") {
+                    var batchno = parentElement.find(':selected').text();
+                    $.ajax({
+                        type: "GET",
+                        url: "/Invoice/GetUnitPrice",
+                        data: { BatchNo: batchno },
+                        success: function (data) {
+
+                            if (parentElement.find("input[name='discount']").val() == "") {
+                                var total = parseInt(parentElement.find('td:eq(8)').text());
+                                total = parseFloat(total);
+                                if (isNaN(total)) {
+                                    total = 0;
+                                }
+                                var unitRate = parseInt(JSON.stringify(data));
+                                var totalloose = parseInt(parentElement.find("input[name='loose']").val());
+                                var loosetotalAmount = (unitRate * totalloose);
+                                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                                total = parseFloat(total) + parseFloat(loosetotalAmount);
+                                total = parseFloat(total).toFixed(2);
+                                parentElement.find('td:eq(8)').html(total);
+
+                            }
+                            if (parentElement.find("input[name='discount']").val() != "") {
+                                var total = parseInt(parentElement.find('td:eq(8)').text());
+                                total = parseFloat(total);
+                                if (isNaN(total)) {
+                                    total = 0;
+                                }
+                                var unitRate = parseInt(JSON.stringify(data));
+                                var totalloose = parseInt(parentElement.find("input[name='loose']").val());
+                                var loosetotalAmount = (unitRate * totalloose);
+                                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                                total = parseFloat(total) + parseFloat(loosetotalAmount);
+                                total = parseFloat(total).toFixed(2);
+                                var discount = parseInt(parentElement.find('input[name="discount"]').val());
+                                discount = total * (discount / 100);
+                                total = total - discount;
+                                parentElement.find('td:eq(8)').html(total);
+                            }
+                        }
+                    });
+                }
+                else {
+                    amount = 0;
+                }
+                parentElement.find('td:eq(8)').html(amount);
+            }
+            if (parentElement.find('input[name="text1"]').val() != "" && parentElement.find("input[name='loose']").val() != ""
+                && parentElement.find("input[name='discount']").val() != "") {
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                var p = parentElement.find('td:eq(3)').text();
+                var q = parentElement.find('input[name="text1"]').val();
+                amount = p * q;
+                amount = parseFloat(amount) + parseFloat(loosetotalAmount);
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = amount * (discount / 100);
+                amount = amount - discount;
+                amount = parseFloat(amount).toFixed(2);
+                parentElement.find('td:eq(8)').html(amount);
+            }
+
+            amount = parseFloat(amount).toFixed(2);
+            parentElement.find('td:eq(8)').html(amount);
+        });
+        var looseTotal;
+        function assignvalue(data) {
+            looseTotal = data;
+        }
+        $('#purchaseItems').on('keyup', 'input[name="discount"]', function () {
+            var parentElement = $(this).closest("tr");
+            var price = parentElement.find('td:eq(3)').text();
+            var quantity = parentElement.find('input[name="text1"]').val();
+            var amount = price * quantity;
+            if (parentElement.find('input[name="discount"]').val() > 10) {
+                parentElement.find('input[name="discount"]').val(10);
+            }
+            if (parentElement.find('input[name="text1"]').val() != "") {
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = amount * (discount / 100);
+                amount = amount - discount;
+            }
+            if (parentElement.find("input[name='loose']").val() != "" && parentElement.find('input[name="text1"]').val() != "") {
+                var temp = parseInt(parentElement.find("td:eq(8)").text());
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = temp * (discount / 100);
+                amount = temp - discount;
+            }
+            if (parentElement.find("input[name='loose']").val() != "" && parentElement.find("input[name='discount']").val() != "" && parentElement.find("input[name='text1']").val() == "") {
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                amount = loosetotalAmount;
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = amount * (discount / 100);
+                amount = amount - discount;
+                parentElement.find('td:eq(8)').html(amount);
+            }
+            if (parentElement.find("input[name='loose']").val() != "" && parentElement.find("input[name='discount']").val() == "") {
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                amount = loosetotalAmount;
+                parentElement.find('td:eq(8)').html(amount);
+            }
+            if (parentElement.find("input[name='loose']").val() != "" && parentElement.find('input[name="text1"]').val() != ""
+                && parentElement.find('input[name="discount"]').val() == "") {
+                amount = parseFloat(price) * parseFloat(quantity);
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                loosetotalAmount = parseFloat(loosetotalAmount).toFixed(2);
+                amount = parseFloat(amount) + parseFloat(loosetotalAmount);
+                amount = parseFloat(amount);
+                amount = amount.toFixed(2);
+            }
+            parentElement.find('td:eq(8)').html(amount);
+        });
+        $("#purchaseItems").on('change', '#dropdown', function () {
+            var batchno = $('#dropdown :selected').text();
+            var parentElement = $(this).closest("tr");
+            $.ajax({
+                type: "GET",
+                url: "/Invoice/GetExpiry",
+                data: { batchNo: batchno },
+                success: function (data) {
+                    var date = new Date(parseInt(data.ExpiryDate.substr(6)));
+                    date = date.toLocaleDateString();
+                    parentElement.find('td:eq(6)').html(date);
+                    parentElement.find('td:eq(3)').html(data.PackRetailCost);
+                    parentElement.find('input.prodId').val(data.Id);
+                }
+            });
+        });
+        $('#purchaseItems').on('click', '.remove', function () {
+            $(this).parents('tr').remove();
+            var rowCount = $('#purchaseItems tbody tr').length;
+            if (rowCount < 1) {
+                $("#submit").hide();
+            }
+        }
+        );
+        $("#purchaseItems").on('keyup', '.loose', function () {
+            var parentElement = $(this).closest("tr");
+            var price = parentElement.find('td:eq(3)').text();
+            var quantity = parentElement.find('input[name="text1"]').val();
+            var amount = price * quantity;
+            if (parentElement.find("input[name='loose']").val() != "") {
+                var total = amount;
+                total = parseFloat(total);
+                if (isNaN(total)) {
+                    total = 0;
+                }
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                total = parseFloat(total) + parseFloat(loosetotalAmount);
+                total = parseFloat(total).toFixed(2);
+                parentElement.find('td:eq(8)').html(total);
+            }
+            if (parentElement.find("input[name='loose']").val() == "") {
+                var q = parseInt(parentElement.find('input[name="text1"]').val());
+                var p = parseInt(parentElement.find('td:eq(3)').text());
+                var t = parseFloat(q) * parseFloat(p);
+                t = t.toFixed(2);
+                if (isNaN(t)) {
+                    t = 0;
+                    parseFloat(t);
+                }
+                parentElement.find('td:eq(8)').html(t);
+
+            }
+            if (parentElement.find("input[name='text1']").val() == "" && parentElement.find("input[name='loose']").val() != ""
+                && parentElement.find("input[name='discount']").val() != "") {
+
+                var loosetotalAmount = calculateLoosePrice(parentElement);;
+                amount = loosetotalAmount;
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = loosetotalAmount * (discount / 100);
+                amount = amount - discount;
+                parentElement.find('td:eq(8)').html(amount);
+            }
+            if (parentElement.find("input[name='text1']").val() != "" && parentElement.find("input[name='loose']").val() == ""
+                && parentElement.find("input[name='discount']").val() != "") {
+
+                var qu = parseInt(parentElement.find("input[name='text1']").val());
+                var price = parseInt(parentElement.find("td:eq(3)").text());
+                var total = qu * price;
+
+
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = total * (discount / 100);
+                total = total - discount;
+                parentElement.find('td:eq(8)').html(total);
+
+            }
+            if (parentElement.find("input[name='text1']").val() != "" && parentElement.find("input[name='loose']").val() == ""
+                && parentElement.find("input[name='discount']").val() != "") {
+                var qu = parseInt(parentElement.find("input[name='text1']").val());
+                var price = parseInt(parentElement.find("td:eq(3)").text());
+                var total = qu * price;
+
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = total * (discount / 100);
+                total = total - discount;
+                parentElement.find('td:eq(8)').html(total);
+            }
+            if (parentElement.find("input[name='text1']").val() != "" && parentElement.find("input[name='loose']").val() != ""
+                && parentElement.find("input[name='discount']").val() != "") {
+
+                var qu = parseInt(parentElement.find("input[name='text1']").val());
+                var price = parseInt(parentElement.find("td:eq(3)").text());
+                var total = qu * price;
+                total = parseFloat(total).toFixed(2);
+                var loosetotalAmount = calculateLoosePrice(parentElement);
+                total = parseFloat(total) + parseFloat(loosetotalAmount);
+                var discount = parentElement.find('input[name="discount"]').val();
+                discount = total * (discount / 100);
+                total = total - discount;
+                parentElement.find('td:eq(8)').html(total);
+
+            }
+        });
+        function calculateLoosePrice(reference) {
+            var batchno = reference.find(':selected').text();
+            var totalloose = parseFloat(reference.find("input[name='loose']").val());
+            var temp;
+            $.ajax({
+                type: "GET",
+                url: "/Invoice/GetUnitPrice",
+                data: { BatchNo: batchno },
+                async: false,
+                success: function (data) {
+                    temp = JSON.stringify(data);
+                }
+            });
+            temp = parseFloat(temp).toFixed(2) * parseFloat(totalloose);
+            return temp;
+        }
+        $("#submit").click(function () {
+            //validation check
+            var errorcount = 0;
+            $('#purchaseItems tbody tr').each(function (index, value) {
+                if ($('.qunatity', this).val().length == 0 && $('.loose', this).val().length == 0) {
+                    $('input', this).addClass('error');
+                    errorcount++;
+                }
+
+            });
+            //end validation check
+            if (errorcount == 0) {
+                var list = [];
+                $('#purchaseItems tbody tr').each(function (index, value) {
+                    var SaleItem = {
+                        ProductID: parseInt($(this).find('input.prodId').val()),
+                        Quantity: parseFloat($(this).find('input.qunatity').val()),
+                        Loose: parseFloat($(this).find('input.loose').val()),
+                        BatchNo: $(this).find(':selected').text(),
+                        Price: parseFloat($(this).find('td:eq(3)').text()),
+                        ExpiryDate: $(this).find('td:eq(6)').text(),
+                        Discount: parseFloat($(this).find('input.discount').val()),
+                        Amount: parseFloat($(this).find('td:eq(8)').text()),
+                        CustomerName: $("#customerName").val()
+                    }
+                    list.push(SaleItem);
+                });
+                $.ajax({
+                    type: "POST",
+                    url: "/Invoice/SaveSaleProducts",
+                    data: { saleItems: JSON.stringify(list), CustomerName: $("#customerName").val() },
+                    contenttype: "application/json",
+                    success: function (data) {
+                        $("#items").empty();
+                        $("#submit").hide();
+                        $("#customerName").val("");
+                        window.location.href = "/Invoice/print/" + data + "";
+                    },
+                    error: function (data) {
+                        alert("Data transfer failed");
+                    }
+                });
+
+            }
+        });
+        $('#purchaseItems').on('change', '.rowSelector', function () {
+            $('input', this).removeClass('error');
+
+        });
+    }
+    );
+</script>

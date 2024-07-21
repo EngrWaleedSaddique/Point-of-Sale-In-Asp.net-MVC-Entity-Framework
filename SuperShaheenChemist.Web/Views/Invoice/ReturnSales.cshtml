@@ -1,0 +1,432 @@
+﻿@{
+    ViewBag.Title = "Return Products";
+}
+<h2>Return Products</h2>
+<script src="~/Content/Js/jquery-ui.js"></script>
+<link href="~/Content/Css/jquery-ui.css" rel="stylesheet" />
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+<div class="content-wrapper">
+    <!-- pages navigates here -->
+    <section class="content">
+        <div class="row">
+            <div class="col-xs-12 col-md-12 col-sm-12">
+                <div class="box">
+                    <div class="box-body ">
+                        <h4 class="purchase-heading"> <i class="fa fa-check-circle"></i> Return Products Items</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 ">
+                            <div class="form-group">
+                                <label><i class="fa fa-search" aria-hidden="true"></i> <b>ENTER BILL NO TO RETURN PRODUCT :</b></label>
+                                <div class="input-group">
+                                    <input type="text" id="billno" placeholder="Enter Bill No" class="form-control">
+                                    <span class="input-group-append">
+                                        <button class="btn btn-outline-secondary" id="search" type="button">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </span>
+                                    <br />
+                                </div>
+                                    <small>Search through Bill No</small> <br />
+                                </div>
+                            </div>
+                        
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table" id="purchaseItems">
+                                    <thead class="">
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>Batch No</th>
+                                            <th>Generic Name</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Return Quantity</th>
+                                            <th>Loose</th>
+                                            <th>Return Loose</th>
+                                            <th>Discount</th>
+                                            <th>Return Discount</th>
+                                            <th>Amount</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="items">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <script src="~/Client/dist/js/sweetalert.min.js"></script>
+</div>
+<script>
+$(document).ready(function () {
+    $("#search").click(function () {
+        var bill = parseInt($("#billno").val());
+        $.ajax({
+            type: "GET",
+            url: "/Invoice/ReturnProducts",
+            data: { billno: bill },
+            async:false,
+            success: function (data) {
+                if (data == "Fail") {
+                    swal("Failed!", "Bill No didnot exist!", "error");
+                }
+                var tr;
+                $("#items").empty();
+                for (var i = 0; i < data.length; i++) {
+                    tr = $('<tr/>');
+                    tr.append("<td>" + data[i].Product.ProductName + "</td>");
+                    tr.append("<td>" + data[i].BatchNo + "</td>");
+                    tr.append("<td>" + data[i].Product.GenericName + "</td>");
+                    tr.append("<td>" + data[i].Price + "</td>");
+                    tr.append("<td>" + data[i].Quantity + "</td>");
+                    tr.append("<td><input type='text' style='width: 80px;' class='quan' id='quantity'/></td>");
+                    tr.append("<td>" + data[i].Loose + "</td>");
+                    tr.append("<td><input type='text' style='width: 80px;' class='loose' id='loose' /></td>");
+                    tr.append("<td>" + data[i].Discount + "</td>");
+                    tr.append("<td><input type='text' style='width: 80px;' class='discount' id='discount' /></td>");
+                    tr.append("<td>" + data[i].Amount + "</td>");
+                    tr.append("<td><button id='btnReturn' class='btn btn-primary'>Return</button></td>");
+                    tr.append("<td><input type='hidden' class='prodId' value='" + data[i].Id + "'/></td>");
+                    tr.append("<td><input type='hidden' class='productId' value='" + data[i].Product.Id + "'/></td>");
+                    $('#purchaseItems').append(tr);
+                }
+                $('#purchaseItems tbody tr').each(function (index, value) {
+                    var q = parseInt($(this).find('td:eq(4)').text());
+                    if (q == 0) {
+                        $(this).find("#quantity").attr("disabled", true);
+                    }
+                    var loose = parseInt($(this).find('td:eq(6)').text());
+                    if (loose == 0) {
+                        $(this).find("#loose").attr("disabled", true);
+                    }
+                    var discount = parseInt($(this).find('td:eq(8)').text());
+                    if (discount == 0) {
+                        $(this).find("#discount").attr("disabled", true);
+                    }
+                });
+            },
+            error: function (data) {
+                swal("Failed","Please enter correct Bill No","error");
+            }
+        });
+    });
+    $("#productId").click(function () {
+        alert("Id clicked");
+    });
+
+    $('#purchaseItems').on('click', '#btnReturn', function () {
+        var parentElement = $(this).parents('tr');
+        var prodId = parseFloat(parentElement.find('input.prodId').val());
+        var quantityReturn;
+        quantityReturn = parentElement.find('input.quan').val();
+        looseReturn = parentElement.find('input.loose').val();
+        var discount = parentElement.find('input.discount').val();
+        var PId = parseInt(parentElement.find('input.productId').val());
+        var amountDeducted = 0;
+        var perItemCost = 0;
+        if (quantityReturn == "" && looseReturn != "" && discount == "") {
+            //done
+            if (parseInt(parentElement.find('input.loose').val()) > parseInt(parentElement.find('td:eq(6)').text())) {
+                swal("Failed!", "Return Sale is greater then Purcahse.Please Correct Values!", "error");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        amountDeducted = amountDeducted + (looseReturn * data.UnitRetail);
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: 0,
+                            Loose: parseInt(parentElement.find('input.loose').val()),
+                            Discount: 0,
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                                
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+                    },
+                    error: function (data) {
+                        alert("Failed");
+                    }
+                });
+            }
+        }
+        if (quantityReturn != "" && looseReturn != "" && discount != "") {
+            //done
+            if (parseInt(parentElement.find('input.loose').val()) > parseInt(parentElement.find('td:eq(6)').text())
+                || parseInt(parentElement.find('input.quan').val()) > parseInt(parentElement.find('td:eq(4)').text())
+                || parseInt(parentElement.find('input.discount').val()) > parseInt(parentElement.find('td:eq(8)').text())
+            ) {
+                swal("Error!", "Return Sale is greater then Purcahse.Please Correct Values!", "error");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        //alert(JSON.stringify(data.UnitRetail));
+                        amountDeducted = quantityReturn * data.PackRetailCost;
+                        amountDeducted = amountDeducted + (looseReturn * data.UnitRetail);
+                        discount = (parseFloat(amountDeducted) * (parseFloat(discount)) / 100);
+                        amountDeducted = amountDeducted - discount;
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: parseInt(parentElement.find('input.quan').val()),
+                            Loose: parseInt(parentElement.find('input.loose').val()),
+                            Discount: parseInt(parentElement.find('input.discount').val()),
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+                    },
+                    error: function (data) {
+                        alert("Failed");
+                    }
+                });
+            }
+        }
+        if (quantityReturn != "" && looseReturn != "" && discount == "") {
+            //done
+            if (parseInt(parentElement.find('input.loose').val()) > parseInt(parentElement.find('td:eq(6)').text())
+                || parseInt(parentElement.find('input.quan').val()) > parseInt(parentElement.find('td:eq(4)').text())) {
+                alert("Values of return Sale is greater than Purchase Sale.Please Correct data.");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        //alert(JSON.stringify(data.UnitRetail));
+                        amountDeducted = quantityReturn * data.PackRetailCost;
+                        amountDeducted = amountDeducted + (looseReturn * data.UnitRetail);
+
+
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: parseInt(parentElement.find('input.quan').val()),
+                            Loose: parseInt(parentElement.find('input.loose').val()),
+                            Discount: 0,
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+
+
+                    },
+                    error: function (data) {
+                        alert("Failed");
+                    }
+                });
+            }
+        }
+        if (quantityReturn != "" && looseReturn == "" && discount == "") {
+            //done
+            if (parseInt(parentElement.find('input.quan').val()) > parseInt(parentElement.find('td:eq(4)').text())) {
+                alert("Return Sale is greater than purchase.Please Correct VAlues");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        amountDeducted = quantityReturn * data.PackRetailCost;
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: parseInt(parentElement.find('input.quan').val()),
+                            Loose: 0,
+                            Discount: 0,
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+                    },
+                    error: function (data) {
+                        window.location.href = "/Invoice/ReturnSales";
+                    }
+                });
+            }
+        }
+        if (quantityReturn == "" && looseReturn != "" && discount != "") {
+            //done
+            if (parseInt(parentElement.find('input.loose').val()) > parseInt(parentElement.find('td:eq(4)').text())
+                || parseInt(parentElement.find('input.discount').val()) > parseInt(parentElement.find('td:eq(8)').text())) {
+                alert("Return Sale is greater than purchase.Please Correct VAlues");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        amountDeducted = amountDeducted + (looseReturn * data.UnitRetail);
+                        discount = (parseFloat(amountDeducted) * (parseFloat(discount)) / 100);
+                        amountDeducted = amountDeducted - discount;
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: 0,
+                            Loose: parseInt(parentElement.find('input.loose').val()),
+                            Discount: parseInt(parentElement.find('input.discount').val()),
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+
+
+                    },
+                    error: function (data) {
+                        alert("Failed");
+                    }
+                });
+            }
+        }
+        if (quantityReturn != "" && looseReturn == "" && discount != "") {
+            //done
+            if (parseInt(parentElement.find('input.quan').val()) > parseInt(parentElement.find('td:eq(4)').text())
+                || parseInt(parentElement.find('input.discount').val()) > parseInt(parentElement.find('td:eq(8)').text())) {
+                alert("Return Sale is greater than purchase.Please Correct VAlues");
+            }
+            else {
+                $.ajax({
+                    type: 'GET',
+                    url: '/Purchase/GetPackAndUnitCost',
+                    async: false,
+                    data: { id: parentElement.find('input.productId').val() },
+                    success: function (data) {
+                        amountDeducted = quantityReturn * data.PackRetailCost;
+                        discount = (parseFloat(amountDeducted) * (parseFloat(discount)) / 100);
+                        amountDeducted = amountDeducted - discount;
+                        //Latest Code Added here
+                        var list = {
+                            RecordID: parseInt(parentElement.find('input.prodId').val()),
+                            Quantity: parseInt(parentElement.find('input.quan').val()),
+                            Loose: 0,
+                            Discount: parseInt(parentElement.find('input.discount').val()),
+                            ReturnAmount: amountDeducted,
+                            ProductId: PId
+                        };
+                        $.ajax({
+                            type: 'POST',
+                            url: '/Purchase/ReturnItems',
+                            data: { ReturnItems: JSON.stringify(list) },
+                            async: false,
+                            contenttype: "application/json",
+                            success: function (data) {
+                                parentElement.remove();
+                                swal("Returned!", "Item Return Successfully!", "success");
+                            },
+                            error: function (data) {
+
+                            }
+                        });
+                        //latest Code ends here
+                    },
+                    error: function (data) {
+                        alert("Failed");
+                    }
+                });
+            }
+        }
+
+        if (quantityReturn == "" && looseReturn == "" && discount != "") {
+            swal("Error!", "Please fill the quantity or loose field!", "error");
+        }
+        amountDeducted = amountDeducted.toFixed(2);
+        
+    }
+    );
+    
+});
+</script>

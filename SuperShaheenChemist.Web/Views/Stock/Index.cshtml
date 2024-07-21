@@ -1,0 +1,61 @@
+﻿@{
+    ViewBag.Title = "Stock";
+}
+<h2>Stock</h2>
+
+<script src="~/Content/Js/jquery-ui.js"></script>
+<link href="~/Content/Css/jquery-ui.css" rel="stylesheet" />
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+<div class="content-wrapper">
+    <!-- pages navigates here -->
+    <section class="content">
+
+        <div class="row">
+            <div class="col-xs-12 col-md-12 col-sm-12">
+                <div class="box">
+                    <div class="box-body ">
+                        <h4 class="purchase-heading"> <i class="fa fa-check-circle"></i>Search Purchase Items</h4>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 ">
+                            <div class="form-group">
+                                <label><i class="fa fa-search" aria-hidden="true"></i> <b>SEARCH ITEMS :</b></label>
+                                @*<select name="search_area" class="form-control input-lg" id="barcode_scan_area" style="width: 100%;">
+                                    </select>*@
+                                <input type="text" id="searchProduct" placeholder="Search Product By Name Or BarCode" class="form-control clearable" />
+                                <small>Search through product name or Barcode </small> <br />
+                                <small style="color:#c00;">Note : After changing MRP press enter to apply values. </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table" id="purchaseItems">
+                                    <thead class="">
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>Generic Name</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="items">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-right">
+                        <input id="submit" type="button" value="Save Purchase" class="btn btn-primary" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <script src="~/Client/dist/js/sweetalert.min.js"></script>
+</div>

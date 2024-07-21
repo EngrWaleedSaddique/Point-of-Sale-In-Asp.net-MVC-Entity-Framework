@@ -1,0 +1,138 @@
+﻿
+@{
+    ViewBag.Title = "PreviewReceipt";
+}
+<style>
+    @@media print {
+        .hidden-print,
+        .hidden-print * {
+            display: none !important;
+        }
+        #btn {
+            display: none !important;
+        }
+    }
+    @@page
+    {
+        size: auto; /* auto is the initial value */
+        margin: 0; /* this affects the margin in the printer settings */
+        margin-top:20px;
+    }
+}
+</style>
+<div class="row" id="print-section">
+    <div class="col-md-2 col-sm-2 col-xs-2 text-center">
+
+    </div>
+    <div class="col-md-8 col-sm-82 col-xs-8  text-center">
+        <h2 style="padding:0px; margin:0px;">
+            Super Shaheen Chemist
+        </h2>
+
+
+        <b>
+            Address : DHQ HOSPITAL KOTLI AZAD KASHMIR
+        </b>
+        <br />
+        <b>
+            Phone : 0333-1111111
+        </b>
+        <br />
+        <b>
+            Email Address : supershaheen@@gmail.com
+        </b>
+        <br />
+        <b>
+            MD: Ikram Asghar
+        </b>
+    </div>
+    
+    <div class="col-md-12">
+        <hr />
+        <b>Bill No :@ViewBag.orderNo </b><br>
+        <b>Customer Name : @ViewBag.CustomerName</b><br>
+        <b>Date : 12-01-21</b><br>
+        <br />
+        <br />
+        
+        <button id="btn" class="btn btn-primary mb-2 mr-3 float-right">Print</button>
+    </div>
+    
+    <div class="col-md-2 col-sm-2 col-xs-2 text-center">
+        <div>
+
+        </div>
+    </div>
+    <div class="col-xs-12 col-md-12">
+        <div class="">
+            <table class="table borderless">
+                <thead>
+                    <tr>
+                        <th>
+                            Product Name
+                        </th>
+                        <th>
+                            Quantity
+                        </th>
+                        <th>Units</th>
+                        <th>
+                            Batch
+                        </th>
+                        <th>
+                            Price
+                        </th>
+                        <th>
+                            Disc %
+                        </th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in ViewBag.Data)
+                    {
+                        <tr style="border-bottom:2px solid #ccc;">
+                            <td>
+                                @item.Product.ProductName
+                            </td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Loose</td>
+                            <td>
+                                @item.BatchNo
+                            </td>
+                            <td>
+                                @item.Price
+                            </td>
+                            <td>
+                                @item.Discount
+                            </td>
+                            <td>
+                                @item.Amount
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <table class="table table-borderless">
+            <tr>
+                <th>
+                    No of
+                    Items : @ViewBag.numberOfItems
+                </th>
+                <th class="text-right">Net Total : Rs                        @ViewBag.total</th>
+            </tr>
+        </table>
+        <hr />
+        <p class="text-center"><b>Get Well Soon </b></p>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        window.print();
+        $("#btn").click(function () {
+            window.print();
+        });
+    });
+</script>

@@ -1,0 +1,82 @@
+﻿@{
+    ViewBag.Title = "OutOfStock";
+}
+<link href="~/Content/Css/datatable.min.css" rel="stylesheet" type="text/css" />
+<link href="~/Content/Css/responsive.datatable.min.css" rel="stylesheet" type="text/css" />
+<link href="~/Content/Css/button.datatable.css" rel="stylesheet" type="text/css" />
+<h2>Total Stock</h2>
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table display responsive nowrap" id="purchaseItems">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Generic Name</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in ViewBag.data)
+                        {
+                            <tr>
+                                <td>@item.Product.ProductName</td>
+                                <td>@item.Product.GenericName</td>
+                                <td>@item.Stock</td>
+                                <td>@item.Price</td>
+                                <td>@item.TotalAmount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Content/Js/dataTables.min.js"></script>
+<script src="~/Content/Js/dataTables.responsive.min.js"></script>
+<script src="~/Content/Js/buttons.html5.js"></script>
+<script src="~/Content/Js/pdfmake.min.js"></script>
+<script src="~/Content/Js/vfs_fonts.js"></script>
+<!-- Below file is showing print button if this version is not used button will hide-->
+<script src="~/Content/Js/dataTables.buttons.js"></script>
+<script src="~/Content/Js/colVis.min.js"></script>
+<script src="~/Content/Js/jszip.min.js"></script>
+<script src="~/Content/Js/buttons.print.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        $('#purchaseItems').DataTable(
+            {
+                dom: 'Blfrtip',
+                buttons: [
+                    'colvis',
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4]
+                        }
+                    }
+
+                ]
+            }
+        );
+
+    });
+</script>

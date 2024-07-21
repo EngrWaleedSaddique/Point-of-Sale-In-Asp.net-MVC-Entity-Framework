@@ -1,0 +1,227 @@
+﻿@{
+    ViewBag.Title = "Add Purchase Order";
+}
+
+<h2>Add Purchase Order</h2>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css"></script>
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+<section class="content">
+
+    <div class="row">
+        <div class="col-xs-12 col-md-12 col-sm-12">
+            <div class="box">
+                <div class="box-body ">
+                    <h4 class="purchase-heading"> <i class="fa fa-check-circle"></i> Create Purchase Order</h4>
+
+                </div>
+                <div class="row">
+                    <div class="col-md-12 ">
+                        <div class="form-group">
+                            <label><i class="fa fa-search" aria-hidden="true"></i> <b>SEARCH ITEMS :</b></label>
+                            <input type="text" id="searchProduct" placeholder="Search Product By Name Or BarCode" class="form-control clearable" />
+                            <small>Search through product name or Barcode </small> <br />
+                            <small style="color:#c00;">Note : After changing MRP press enter to apply values. </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table" id="purchaseItems">
+                    <thead class="">
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Generic Name</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items">
+                    </tbody>
+                    <tfoot id="total">
+                        
+                        
+                        <tr>
+                            <td colspan="4"></td>
+                            <td class=" expense-total-settings"> <b>Total</b> </td>
+                            <td>
+                                <input type="number" name="total_bill" value="0.00" step="any" readonly="readonly" class="total_bill bill-total-settings" reqiured="" />
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 text-right">
+        <input id="submit" type="button" value="Place Order" class="btn btn-primary" />
+    </div>
+</section>
+<script src="~/Client/dist/js/sweetalert.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var rowCount = $('#purchaseItems tbody tr').length;
+        if (rowCount < 1) {
+            $("#submit").hide();
+            $("#total").hide();
+        }
+        $('#searchProduct').autocomplete({
+            source: function (request, response) {
+
+                $.ajax({
+                    url: "/purchase/GetProductList",
+                    type: "GET",
+                    dataType: 'JSON',
+                    selectFirst: true,
+                    data: { productName: request.term },
+                    success: function (data) {
+
+                        response($.map(data, function (item) {
+                            return { label: item.ProductName, value: item.productID }
+                        }));
+
+                    }
+
+                });
+            },
+            select: function (event, ui) {
+                event.preventDefault();
+
+                $('#searchProduct').val('');
+
+
+                $product_id = ui.item.value;
+                addRecordToTable($product_id);
+                $('#submit').show();
+                $("#total").show();
+            },
+            focus: function (event, ui) {
+                return false;
+            }
+        });
+        function addRecordToTable(productid) {
+            $.ajax({
+                url: "/purchase/getProduct",
+                type: "GET",
+                dataType: 'JSON',
+                data: { productId: productid },
+                success: function (data) {
+                    //alert(JSON.stringify(data));
+                    $("#purchaseItems").append('<tr class="rowSelector" style="background-color: white;"><td>' + data.ProductName + '</td><td>'
+                        + data.GenericName + '</td><td><input class="qunatity" type="number"/></td><td>' + data.PackCost + '</td><td id="amount">0</td><td><button class="remove btn btn-danger"><i class="fa fa-trash bill-times-icon" aria-hidden="true"></i></button> </td><td><input type="hidden" class="prodId" value="' + data.Id + '"></td></tr>');
+                    $("#barcode_scan_area").empty();
+                }
+            });
+
+        }
+        
+        $('#purchaseItems').on('change', '.rowSelector', function () {
+            var totalAmount = 0;
+            //alert($(this).find('td:eq(3)').text());
+            var input = $(this).find('input').val();
+            var value = $(this).find('td:eq(3)').text();
+            $(this).find('td:eq(4)').html(input * value);
+            $('input', this).removeClass('error');
+
+
+            //Code to calculate total
+            $('#purchaseItems tbody tr').each(function (index, value) {
+                
+
+                totalAmount = totalAmount + parseInt($(this).find('td:eq(4)').text());
+                
+                
+            });
+            $(".total_bill").prop('readonly', false);
+            $(".total_bill").val(totalAmount);
+            $(".total_bill").prop('readonly', true);
+            //end of code here
+
+
+        });
+        $('#purchaseItems').on('click', '.remove', function () {
+
+            $(this).parents('tr').remove();
+            //Code to calculate total
+            var totalAmount = 0;
+            $('#purchaseItems tbody tr').each(function (index, value) {
+                
+
+                totalAmount = totalAmount + parseInt($(this).find('td:eq(4)').text());
+
+
+            });
+            $(".total_bill").prop('readonly', false);
+            $(".total_bill").val(totalAmount);
+            $(".total_bill").prop('readonly', true);
+            //end of code here
+
+            var rowCount = $('#purchaseItems tbody tr').length;
+            if (rowCount < 1) {
+                $("#submit").hide();
+
+                //$("#sbTotal").prop('readonly', false);
+                //$("#sbTotal").val(0);
+                //$("#sbTotal").prop('readonly', true);
+
+                //$(".total_bill").prop('readonly', false);
+                //$(".total_bill").val(0);
+                //$(".total_bill").prop('readonly', true);
+
+                $("#total").hide();
+            }
+        }
+
+        );
+        $('#submit').click(function () {
+            var errorCount = 0;
+            //Validation
+            $('#purchaseItems tbody tr').each(function (index, value) {
+                if ($('.qunatity', this).val().length == 0) {
+                    $('input', this).addClass('error');
+                    errorCount++;
+                }
+            });
+            //validation end
+            if (errorCount == 0) {
+                var list = [];
+                $('#purchaseItems tbody tr').each(function (index, value) {
+                    var purchaseItem = {
+                        ProductID: parseInt($(this).find('input.prodId').val()),
+                        Quantity: parseInt($(this).find('input.qunatity').val()),
+                        TotalAmount: parseInt($(this).find('td:eq(4)').text())
+                    }
+                    list.push(purchaseItem);
+                });
+                //alert(JSON.stringify(list));
+                $.ajax({
+                    type: "POST",
+                    url: "/Purchase/SavePurchaseOrder",
+                    data: { purchaseItems: JSON.stringify(list), total: $(".total_bill").val() },
+                    contenttype: "application/json",
+                    success: function (data) {
+                        $("#items").empty();
+                        $(".total_bill").prop('readonly', false);
+                        $(".total_bill").val(0);
+
+                        $('#submit').hide();
+                        $("#total").hide();
+                        totalAmount = 0;
+
+                        swal("Purchased Order Placed Successfully!", "Purchase Product Added Successfully!", "success");
+                    },
+                    error: function (data) {
+                        alert("Data transfer failed");
+                    }
+                });
+            }
+        });
+    });
+</script>

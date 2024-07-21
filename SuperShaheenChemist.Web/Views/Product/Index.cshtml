@@ -1,0 +1,153 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<script src="~/Client/dist/js/sweetalert.min.js"></script>
+<link href="~/Content/Css/datatable.min.css" rel="stylesheet" type="text/css"/>
+<link href="~/Content/Css/responsive.datatable.min.css" rel="stylesheet" type="text/css" />
+<link href="~/Content/Css/button.datatable.css" rel="stylesheet" type="text/css"/>
+<h2>Index</h2>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="container tblcontainer responsive">
+            <table class="display responsive nowrap table" id="tblProduct" style="width:100%">
+                <thead>
+                    <tr>
+                        <th scope="col">ProductName</th>
+                        <th scope="col">GenericName</th>
+                        <th scope="col">Batch No</th>
+                        <th scope="col">Bar Code</th>
+                        <th scope="col">Unit Retail Price</th>
+                        <th scope="col">Retail Cost</th>
+                        <th scope="col">Edit</th>
+                        <th scope="col">Delete</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+<script src="~/Content/Js/dataTables.min.js"></script>
+<script src="~/Content/Js/dataTables.responsive.min.js"></script>
+<script src="~/Content/Js/buttons.html5.js"></script>
+<script src="~/Content/Js/pdfmake.min.js"></script>
+<script src="~/Content/Js/vfs_fonts.js"></script>
+<!-- Below file is showing print button if this version is not used button will hide-->
+<script src="~/Content/Js/dataTables.buttons.js"></script>
+<script src="~/Content/Js/colVis.min.js"></script>
+<script src="~/Content/Js/jszip.min.js"></script>
+<script src="~/Content/Js/buttons.print.min.js"></script>
+<script>
+    $(document).ready(function () {
+        bindDatatable();
+        $('.tblcontainer').on('click', 'a.deleteBtn', function () {
+            var table = $('#tblProduct').DataTable();
+            swal({
+                title: "Confirm",
+                text: "Are you sure you want to Delete Product?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((willDelete) => {
+                 if (willDelete) {
+                        $.ajax(
+                        {
+                                type: 'POST',
+                                url:'@Url.Action("Delete","Product")', /*'/Product/Delete',*/
+                                data: {
+                                    ID: $(this).attr('data-id')
+                                }
+                            }).done(function (response) {
+                            table.row($(this).parents('tr')).remove().draw();
+                            swal("Product Deleted!", "Product Deleted Successfully!", "success");
+                        }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                                alert("Fail");
+                        });
+                 }
+             });
+        });
+    });
+
+    function bindDatatable() {
+        var table = $('#tblProduct')
+            .DataTable({
+                dom: 'Blfrtip',
+                buttons: [
+                    'colvis',
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: [0,1,2,3,4,5]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5]
+                        }
+                    }
+
+                ],
+                "sAjaxSource": "/Product/GetData",
+                "bServerSide": true,
+                "bProcessing": true,
+                "bSearchable": true,
+                "order": [[1, 'asc']],
+                "language": {
+                    "emptyTable": "No record found.",
+                    "processing":
+                        '<i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color:#2a2b2b;"></i><span class="sr-only">Loading...</span> '
+                },
+                "columns": [
+                    {
+                        "data": "ProductName",
+                        "searchable": true,
+                        responsivePriority: 1
+                    },
+                    {
+                        "data": "GenericName",
+                        "searchable": true
+                    },
+                    {
+                        "data": "BatchNo",
+                        "searchable": true
+                    },
+                    {
+                        "data": "BarCode",
+                        "searchable": true
+                    }, {
+                        "data": "UnitRetail",
+                        "searchable": true
+                    }, {
+                        "data": "PackRetailCost",
+                        "searchable": true,
+                        responsivePriority: 1
+                    },
+                    {
+                        "data": "Id",
+                        "className": "red",
+                        "render": function (data) {
+                            //return '<a class="deleteBtn" href="/product/edit/' + data + '">Edit</a>';
+                            return '<a href="/product/Edit?ID=' + data + '" class="pointer">Edit</a>';
+                        }
+                    },
+                    {
+                        "data": "Id",
+                        "className": "red",
+                        "render": function (data) {
+                            return '<a class="deleteBtn pointer" data-id=' + data + '>Delete</a>';
+                        }
+                    }
+                ]
+            });
+    }
+</script>
+

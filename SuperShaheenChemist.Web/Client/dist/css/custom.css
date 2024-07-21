@@ -1,0 +1,120 @@
+﻿body {
+    table-layout: fixed;
+}
+div.container {
+    max-width: 1200px
+}
+.title-padding {
+    padding: 0px 5px;
+}
+*:focus {
+    outline: none;
+}
+.bg-aqua
+{
+    background-color: #4a6984;
+}
+.close {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    right: 0%;
+    padding: 12px 16px;
+    transform: translate(0%, -50%);
+}
+ul.ui-autocomplete {
+    list-style: none;
+    list-style-type: none;
+    padding: 5px;
+    margin: 10px;
+    
+}
+.ui-autocomplete {
+    background-color: #DCDCDC;
+    cursor: pointer;
+    max-height: 400px;
+    width: 200px; /* just setting it very small it will resize to the input field*/
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+    z-index: 1000;
+    /*overflow-y: scroll;
+    overflow-x: hidden !important;*/
+}
+.ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+    background: #6693bc !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+} 
+.error{
+    border-radius:1px solid red;
+}
+
+
+.ui-menu-item a {
+    background-color: blue;
+}
+ui-menu-item-wrapper
+{
+    color:#ff6a00!important;
+}
+.ui-menu-item a:hover {
+    background-color: blue;
+    color: #fff;
+}
+
+.purchase-heading {
+    background-color: #4a6984;
+    color: #fff;
+    border-radius: 3px;
+    padding: 7px;
+}
+.error {
+    color: red;
+}
+
+select.error, textarea.error, input.error {
+    border-color: #FF0000;
+}
+
+.dataTables tbody td {
+    min-height: 25px; /* or whatever height you need to make them all consistent */
+}
+.dataTables_wrapper .dt-buttons {
+    float: none !important;
+    text-align: center !important;
+}
+.pointer {
+    cursor: pointer;
+    color:red;
+}
+.blue {
+    color: blue;
+    text-decoration: underline;
+}
+.red {
+    color: red;
+    text-decoration: underline;
+}
+table.dataTable thead th {
+    text-decoration: none;
+    color:black;
+}
+
+.padding-0 {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+
+
+@media only screen and (max-width: 600px) {
+    .content-wrapper {
+        margin-top: 50px;
+    }
+}
+*{
+    font-size: 14px;
+}
+/*here is the code for printing*/
+

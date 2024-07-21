@@ -1,0 +1,233 @@
+﻿
+@{
+    ViewBag.Title = "Purchase";
+}
+
+<h2>Purchase</h2>
+
+
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css"></script>
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+<div class="content-wrapper">
+    <!-- pages navigates here -->
+    <section class="content">
+
+        <div class="row">
+            <div class="col-xs-12 col-md-12 col-sm-12">
+                <div class="box">
+                    <div class="box-body ">
+                        <h5 class="purchase-heading"> <i class="fa fa-check-circle"></i> Create Purchase Items</h5>
+                        
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 ">
+                            <div class="form-group">
+                                <label><i class="fa fa-search" aria-hidden="true"></i> <b>SEARCH ITEMS TO ADD PURCHASE :</b></label>
+                                @*<select name="search_area" class="form-control input-lg" id="barcode_scan_area" style="width: 100%;">
+                                </select>*@
+                                <input type="text" id="searchProduct" placeholder="Search Product By Name Or BarCode" class="form-control clearable" />
+                                <small>Search through product name or Barcode </small> <br />
+                                <small style="color:#c00;">Note : After changing MRP press enter to apply values. </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table" id="purchaseItems">
+                                    <thead class="">
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>Batch No</th>
+                                            <th>Generic Name</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody id="items">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-right">
+                        <input id="submit" type="button" value="Save Purchase" class="btn btn-primary" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <script src="~/Client/dist/js/sweetalert.min.js"></script>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var rowCount = $('#purchaseItems tbody tr').length;
+        if (rowCount<1) {
+            $("#submit").hide();
+        }
+        $('#searchProduct').autocomplete({
+            source: function (request, response) {
+
+                $.ajax({
+                    url: "/purchase/GetProductList",
+                    type: "GET",
+                    dataType: 'JSON',
+                    selectFirst: true,
+                    data: { productName: request.term },
+                    success: function (data) {
+                        //alert(JSON.stringify(data));
+                        response($.map(data, function (item) {
+                            return { label: item.ProductName, value: item.productID }
+                        }));
+                        //response($.map(data, function () { }));
+                    }
+
+                });
+            },
+            select: function (event, ui) {
+                event.preventDefault();
+                //$('#searchProduct').val('');
+                //$('#searchProduct').hide();
+                //$('#barcode_scan_area').val(ui.item.value);
+                $('#searchProduct').val('');
+                //$('#barcode_scan_area').focus();
+                //$('#searchProduct').css("display", "none");
+                //$("#barcode_scan_area").append('<option value="' + ui.item.value + '">' + ui.item.label + '</option>');
+
+                $product_id = ui.item.value;
+                addRecordToTable($product_id);
+                $('#submit').show();
+            },
+            focus: function (event, ui) {
+                //event.preventDefault();
+                //$('input[name="user-name"]').val(ui.item.label);
+                return false;
+            }
+        });
+        function addRecordToTable(productid) {
+            $.ajax({
+                url: "/purchase/getProduct",
+                type: "GET",
+                dataType: 'JSON',
+                data: { productId: productid },
+                success: function (data) {
+                    Pname = data.ProductName;
+                    //modified coded added here
+                    $.ajax({
+                        async: false,
+                        type: "GET",
+                        url: "/invoice/ProductsWithBatchNo",
+                        data: { Pname: Pname },
+                        success: function (data) {
+                            dropdowndata = data;
+
+                        }
+                    });
+                    var date = new Date(parseInt(data.ExpiryDate.substr(6)));
+                    date = date.toLocaleDateString();
+                    var start = "<select id='dropdown'>";
+                    var close = "</select>";
+                    var pattern = "";
+                    $.each(dropdowndata, function (i, data) {
+
+
+                        pattern = pattern + "<option value=" + data.Id + ">" + data.BatchNo + "</option>";
+                    });
+                    var string = start + pattern + close;
+                    //modified code ends here
+                    $("#purchaseItems").append('<tr class="rowSelector" style="background-color: white;"><td>' + data.ProductName + '</td><td>'+string+'</td><td>'
+                        + data.GenericName + '</td><td><input class="qunatity" type="number"/></td><td>' + data.PackCost + '</td><td id="amount">0</td><td><button class="remove btn btn-danger"><i class="fa fa-trash bill-times-icon" aria-hidden="true"></i></button> </td><td><input type="hidden" class="prodId" value="' + data.Id + '"></td></tr>');
+                    $("#barcode_scan_area").empty();
+                }
+            });
+
+        }
+        $('#purchaseItems').on('keyup', '.rowSelector', function () {
+
+            //alert($(this).find('td:eq(5)').text());
+            var input = $(this).find('input').val();
+            var value = $(this).find('td:eq(4)').text();
+            $(this).find('td:eq(5)').html(input * value);
+            $('input', this).removeClass('error');
+
+        });
+        $('#purchaseItems').on('click', '.remove', function () {
+            $(this).parents('tr').remove();
+
+            var rowCount = $('#purchaseItems tbody tr').length;
+            if (rowCount < 1) {
+                $("#submit").hide();
+            }
+        }
+        );
+
+
+        $("#purchaseItems").on('change', '#dropdown', function () {
+            var batchno = $('#dropdown :selected').text();
+            var parentElement = $(this).closest("tr");
+            $.ajax({
+                type: "GET",
+                url: "/Invoice/GetExpiry",
+                data: { batchNo: batchno },
+                success: function (data) {
+                    
+                    parentElement.find('td:eq(4)').html(data.PackRetailCost);
+                    if (parentElement.find('.qunatity') != "") {
+
+                        var input = parentElement.find('input').val();
+                        var value = parentElement.find('td:eq(4)').text();
+                        parentElement.find('input.prodId').val(data.Id);
+                        parentElement.find('td:eq(5)').html(input * value);
+                    }
+                }
+            });
+        });
+
+
+
+
+        $('#submit').click(function () {
+            var errorCount=0;
+            //Validation
+            $('#purchaseItems tbody tr').each(function (index, value) {
+                if ($('.qunatity', this).val().length == 0) {
+                    $('input', this).addClass('error');
+                    errorCount++;
+                }
+            });
+            //validation end
+            if (errorCount == 0) {
+                var list = [];
+                $('#purchaseItems tbody tr').each(function (index, value) {
+                    var purchaseItem = {
+                        ProductID: parseInt($(this).find('input.prodId').val()),
+                        Quantity: parseInt($(this).find('input.qunatity').val()),
+                        TotalAmount: parseInt($(this).find('td:eq(5)').text()),
+                        BatchNo: $(this).find(':selected').text()
+                    }
+                    list.push(purchaseItem);
+                });
+                //alert(JSON.stringify(list));
+                $.ajax({
+                    type: "POST",
+                    url: "/Purchase/SavePurchase",
+                    data: { purchaseItems: JSON.stringify(list) },
+                    contenttype: "application/json",
+                    success: function (data) {
+                        $("#items").empty();
+                        swal("Purchased Product Added Successfully!", "Purchase Product Added Successfully!", "success");
+                    },
+                    error: function (data) {
+                        alert("Data transfer failed");
+                    }
+                });
+            }
+        });
+    });
+</script>

@@ -1,0 +1,164 @@
+﻿@{
+    ViewBag.Title = "Purchases";
+}
+<h2>Purchases</h2>
+
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css"></script>
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+
+
+
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+
+<link href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.datatables.net/buttons/1.6.5/css/buttons.dataTables.css" rel="stylesheet" type="text/css" />
+
+
+
+
+
+<div class="content-wrapper">
+    <!-- pages navigates here -->
+
+
+    <div class="row">
+        <div class="col-xs-12 col-md-12 col-sm-12">
+            <div class="box">
+
+                <div class="box-body ">
+                    <h4 class="purchase-heading"> <i class="fa fa-check-circle"></i>Search Purchase Items</h4>
+
+                </div>
+                <div class="container">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            Date From <input type="text" name="date1" value="" id="date_from" />
+                        </div>
+                        <div class="col-md-3">
+                            Date To <input type="text" name="date2" value="" id="date_to" />
+                        </div>
+                        <div class="col-md-2">
+                            <button id="searchBtn" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search Purchase</button>
+
+
+                        </div>
+                        <div class="col-md-4">
+                            <button id="purchasehBtn" class="btn btn-primary"><i class="fa fa-plus-square" aria-hidden="true"></i> Add Purchase</button>
+                            <button id="resetBtn" class="btn btn-primary"> Reset</button>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table class="table display responsive nowrap" id="purchaseItems">
+                                <thead class="">
+                                    <tr>
+                                        <th>Trans. Id</th>
+                                        <th>Date</th>
+                                        <th>Created By</th>
+                                        <th>Total Amount</th>
+                                        <th>Action</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in ViewBag.data)
+                                    {
+                                        <tr>
+                                            <td>@item.TransactionId</td>
+                                            <td>@item.Date</td>
+                                            <td>@item.CreatedBy</td>
+                                            <td>Rs: @item.TotalAmount/=</td>
+                                            <td><a href="/purchase/GetPurchaseProductDetails?id=@item.TransactionId">View</a></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/Client/dist/js/sweetalert.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.html5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+<!-- Below file is showing print button if this version is not used button will hide-->
+<script src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.colVis.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.colVis.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.5.2/js/buttons.print.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('input[name="date1"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'), 10)
+        }, function (start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+        $('input[name="date2"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'), 10)
+        }, function (start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+
+        $('#purchaseItems').DataTable(
+            {
+                dom: 'Blfrtip',
+                buttons: [
+                    'colvis',
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    }
+
+                ]
+            }
+        );
+        $("#purchasehBtn").click(function () {
+            window.location.href = "/Purchase/Index";
+        });
+        $("#searchBtn").click(function () {
+            window.location.href = "/Purchase/Purchases?Datefrom=" + $("#date_from").val() + "&Dateto=" + $("#date_to").val() +"";
+        });
+        $("#resetBtn").click(function () {
+            window.location.href = "/Purchase/Purchases";
+        });
+    });
+</script>

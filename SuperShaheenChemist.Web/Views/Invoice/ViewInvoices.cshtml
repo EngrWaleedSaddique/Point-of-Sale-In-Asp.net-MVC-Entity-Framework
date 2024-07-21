@@ -1,0 +1,121 @@
+﻿@model List<Order>
+@{
+    ViewBag.Title = "Sales";
+}
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css"></script>
+<script src="~/Client/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+
+<link href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.datatables.net/buttons/1.6.5/css/buttons.dataTables.css" rel="stylesheet" type="text/css" />
+
+
+
+
+<div class="container">
+    <h1>Sales Details</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table display responsive nowrap" id="purchaseItems">
+                    <thead class="">
+                        <tr>
+                            <th>Bill No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items">
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.Date</td>
+                                <td>@item.CustomerName</td>
+                                <td>Rs: @item.TotalAmount/=</td>
+                                <td><a href="/Invoice/ViewReceipt?id=@item.Id">View</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Content/Js/dataTables.min.js"></script>
+<script src="~/Content/Js/dataTables.responsive.min.js"></script>
+<script src="~/Content/Js/buttons.html5.js"></script>
+<script src="~/Content/Js/pdfmake.min.js"></script>
+<script src="~/Content/Js/vfs_fonts.js"></script>
+<!-- Below file is showing print button if this version is not used button will hide-->
+<script src="~/Content/Js/dataTables.buttons.js"></script>
+<script src="~/Content/Js/colVis.min.js"></script>
+<script src="~/Content/Js/jszip.min.js"></script>
+<script src="~/Content/Js/buttons.print.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('input[name="date1"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'), 10)
+        }, function (start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+        $('input[name="date2"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'), 10)
+        }, function (start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+        $('#createOrderBtn').click(function () {
+            window.location.href = "/Purchase/AddPurchaseOrder";
+        });
+        $("#searchBtn").click(function () {
+            window.location.href = "/Invoice/ViewInvoices?FromDate=" + $("#date_from").val() + "&ToDate=" + $("#date_to").val() + "";
+        });
+        $("#resetBtn").click(function () {
+            window.location.href = "/Invoice/ViewInvoices";
+        });
+        $('#purchaseItems').DataTable(
+            {
+                dom: 'Blfrtip',
+                buttons: [
+                    'colvis',
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    }
+
+                ]
+            }
+        );
+
+    });
+</script>

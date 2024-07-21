@@ -1,0 +1,146 @@
+﻿@{
+    ViewBag.Title = "thermalPrinterRecipt";
+}
+<style>
+    * {
+        font-size: 10px;
+        font-family: 'Times New Roman';
+    }
+
+    td,
+    th,
+    tr,
+    table {
+        border-top: 1px solid black;
+        border-collapse: collapse;
+    }
+
+        td.pname,
+        th.pname {
+            width: 75px;
+            max-width: 75px;
+        }
+
+        td.quantity,
+        th.quantity {
+            width: 40px;
+            max-width: 40px;
+            word-break: break-all;
+        }
+
+
+        td.bno,
+        th.bno {
+            width: 40px;
+            max-width: 40px;
+            word-break: break-all;
+        }
+
+        td.unit,
+        th.unit {
+            width: 40px;
+            max-width: 40px;
+            word-break: break-all;
+        }
+
+        td.price,
+        th.price {
+            width: 40px;
+            max-width: 40px;
+            word-break: break-all;
+        }
+        td.amount,
+        th.amount {
+            width: 40px;
+            max-width: 40px;
+            word-break: break-all;
+        }
+
+    .centered {
+        text-align: center;
+        align-content: center;
+    }
+
+    .ticket {
+        width: 155px;
+        max-width: 155px;
+    }
+
+    img {
+        max-width: inherit;
+        width: inherit;
+    }
+
+@@media print {
+    .hidden-print,
+    .hidden-print * {
+        display: none !important;
+    }
+}
+    @@page {
+        size: auto; /* auto is the initial value */
+        margin: 0; /* this affects the margin in the printer settings */
+        margin-top: 20px;
+    }
+
+</style>
+<div class="ticket">
+    @*<img src="./logo.png" alt="Logo">*@
+    <p class="centered">
+        Super Shaheen Chemist
+        <br>DHQ Hospital Kotli
+        <br />Md: Ikram Asghar
+        <br>Mob: 0331-7707777
+        <br>Bill # @ViewBag.orderNo
+        <br />Customer Name:@ViewBag.CustomerName
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Pack</th>
+                <th>Unit</th>
+                <th>P.Name</th>
+                <th>B.No</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in ViewBag.Data)
+            {
+            <tr>
+                
+                <td class="quantity">@item.Quantity</td>
+                
+                @if (item.Loose == 0)
+                {
+                    <td class="unit"></td>
+                }
+                else
+                {
+                    <td class="unit">@item.Loose</td>
+                }
+
+                <td class="pname">@item.Product.ProductName</td>
+                <td class="bno">@item.BatchNo</td>
+                <td class="amount">@item.Amount</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+    <hr />
+    <p class="centered">
+    Total | @ViewBag.numberOfItems Items | Rs:@ViewBag.total
+    </p>
+    <p class="centered">
+        Thanks for your purchase!
+        <br>Developed By Waleed Saddique
+        <br />0346-5888624
+    </p>
+</div>
+    <button id="btnPrint" class="hidden-print">Print</button>
+    
+<script>
+    $(document).ready(function () {
+        window.print();
+    })
+</script>
